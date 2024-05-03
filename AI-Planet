@@ -1,0 +1,45 @@
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: my-AI-Planet-app
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: my-AI-Planet-app
+  template:
+    metadata:
+      labels:
+        app: my-AI-Planet-app
+    spec:
+      containers:
+      - name: my-AI-Planet-app
+        image: <AI-Planet>/my-app:<tag>
+  strategy:
+    canary:
+      steps:
+      - setWeight: 10
+      - setWeight: 50
+      - setWeight: 100
+      analysis:
+        successThreshold: 100
+        interval: 10s
+        timeout: 5m
+kubectl apply -f rollout.yaml
+kubectl argo rollouts get rollout my-AI-Planet-app --watch
+kubectl delete application my-AI-Planet-app -n argocd
+kubectl delete rollout my-AI-Planet-app
+kubectl delete namespace argocd
+
+
+Followed the official Argo CD documentation to install and set up Argo CD.
+Installed the Argo Rollouts controller in the Kubernetes cluster, following the official guide.
+Dockerized a web application and pushed it to a public container registry.
+Modified the Kubernetes manifests in the forked repository to use the Docker image.
+Set up Argo CD to monitor the repository and automatically deploy changes to the Kubernetes cluster.
+Defined a rollout strategy in the application's deployment, specifying a canary release strategy in the rollout definition.
+Triggered a rollout by making a change to the application, updating the Docker image, pushing the new version to the registry, and updating the rollout definition to use this new image.
+Monitored the rollout using Argo Rollouts to ensure the canary release successfully completed.
+Throughout this exercise, I encountered challenges related to understanding the configuration of Argo CD and Argo Rollouts, but I was able to resolve these issues by carefully following the documentation and troubleshooting any errors. 
